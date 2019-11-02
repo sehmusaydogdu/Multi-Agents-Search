@@ -75,13 +75,14 @@ class ReflexAgent(Agent):
 
         "*** YOUR CODE HERE ***"
         resultScore = 0.0
-        baseScores = [1, 10, -20]   #baseScores represent [Food, Capsule, Ghost]
+        # baseScores represent [Food, Capsule, Ghost]
+        baseScores = [1, 10, -20]
 
         resultScore += currentGameState.hasFood(newPos[0], newPos[1]) + baseScores[0]
         foodList = successorGameState.getFood().asList()
 
         for food in foodList:
-           resultScore -= baseScores[0] + (1 - math.exp(-1.0 * manhattanDistance(newPos, food)))
+           resultScore -= baseScores[0] + (1 - math.exp(-1 * manhattanDistance(newPos, food)))
 
         currentGhostPosition = currentGameState.getGhostState(1).getPosition()
         newGhostPosition = successorGameState.getGhostState(1).getPosition()
@@ -89,7 +90,7 @@ class ReflexAgent(Agent):
         if newPos in [currentGhostPosition, newGhostPosition]:
             resultScore += baseScores[2]
         else:
-            resultScore += baseScores[2] * math.exp(-1.0  * manhattanDistance(newPos, newGhostPosition))
+            resultScore += baseScores[2] * math.exp(-1  * manhattanDistance(newPos, newGhostPosition))
 
         return resultScore
 
@@ -152,7 +153,40 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.MinimaxSearch(gameState, 1, 0)
+
+    def MinimaxSearch(self, gameState, currentDepth, agentIndice):
+        if currentDepth > self.depth or gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+
+        legalActionList = gameState.getLegalActions(agentIndice)
+        legalActionMoves =[]
+        for legalAction in legalActionList:
+            if legalAction != "Stop":
+                legalActionMoves.append(legalAction)
+
+        nextIndex = agentIndice + 1
+        nextDepth = currentDepth
+        if nextIndex >= gameState.getNumAgents():
+            nextIndex = 0
+            nextDepth += 1
+
+        results = []
+        for actionMovies in legalActionMoves:
+            generate = gameState.generateSuccessor(agentIndice, actionMovies)
+            minimunSearchResult = self.MinimaxSearch(generate,nextDepth, nextIndex)
+            results.append(minimunSearchResult)
+
+        maxMovie = max(results)
+        if agentIndice == 0 and currentDepth == 1:
+            solution = []
+            for i in range(len(results)):
+                if results[i] == maxMovie:
+                    solution.append(i)
+            return legalActionMoves[solution[0]]
+
+        if agentIndice == 0: return maxMovie
+        else: return min(results)
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
