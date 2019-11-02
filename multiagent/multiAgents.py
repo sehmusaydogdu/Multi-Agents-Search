@@ -14,7 +14,7 @@
 
 from util import manhattanDistance
 from game import Directions
-import random, util,math
+import random, util,math,sys
 
 from game import Agent
 
@@ -162,7 +162,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         legalActionList = gameState.getLegalActions(agentIndice)
         legalActionMoves =[]
         for legalAction in legalActionList:
-            if legalAction != "Stop":
+            if legalAction != Directions.STOP:
                 legalActionMoves.append(legalAction)
 
         nextIndex = agentIndice + 1
@@ -192,13 +192,52 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     """
     Your minimax agent with alpha-beta pruning (question 3)
     """
+    def maximize(self, gameState, depth, numGhosts, alpha, beta):
+        if gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+
+        maxValue = sys.maxsize * (-1)
+        action_direction = Directions.STOP
+
+        for direction in gameState.getLegalActions(0):
+          successor = gameState.generateSuccessor(0, direction)
+          temp = self.minimize(successor, depth, 1, numGhosts, alpha, beta)
+          if temp > maxValue:
+            maxValue = temp
+            action_direction = direction
+          if maxValue > beta:
+              return maxValue
+          alpha = max(alpha, maxValue)
+        if depth > 1:
+          return maxValue
+        return action_direction
+
+    def minimize(self, gameState, depth, agentIndice, numGhosts, alpha, beta):
+        if gameState.isWin() or gameState.isLose():
+          return self.evaluationFunction(gameState)
+
+        minValue = sys.maxsize
+        for direction in gameState.getLegalActions(agentIndice):
+          successor = gameState.generateSuccessor(agentIndice, direction)
+          if agentIndice == numGhosts:
+            if depth < self.depth: tempVal = self.maximize(successor, depth + 1, numGhosts, alpha, beta)
+            else: tempVal = self.evaluationFunction(successor)
+          else:
+            tempVal = self.minimize(successor, depth, agentIndice + 1, numGhosts, alpha, beta)
+          if tempVal < minValue: minValue = tempVal
+          if minValue < alpha: return minValue
+          beta = min(beta, minValue)
+        return minValue
 
     def getAction(self, gameState):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        min = sys.maxsize * (-1)
+        max = sys.maxsize
+        numAgent = gameState.getNumAgents() - 1
+        return self.maximize(gameState, 1, numAgent , min, max)
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
