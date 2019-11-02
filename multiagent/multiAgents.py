@@ -243,16 +243,48 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 4)
     """
+    def maxNode(self, gameState, numGhosts, plyCounter):
+        if gameState.isWin() or gameState.isLose() or plyCounter == 0:
+            return self.evaluationFunction(gameState)
+
+        evaluations = []
+        for action in gameState.getLegalActions():
+            evaluations.append(self.minNode(gameState.generateSuccessor(self.index, action), numGhosts, plyCounter))
+        return max(evaluations)
+
+    def minNode(self, gameState, numGhosts, plyCounter):
+        if gameState.isWin() or gameState.isLose() or plyCounter == 0:
+            return self.evaluationFunction(gameState)
+
+        totalNumGhosts = gameState.getNumAgents() - 1
+        currentGhostIndex = totalNumGhosts - numGhosts + 1
+        legalActions = gameState.getLegalActions(currentGhostIndex)
+        sum = 0.0
+        if numGhosts > 1:
+            for action in legalActions:
+                sum += float(self.minNode(gameState.generateSuccessor(currentGhostIndex, action), numGhosts - 1, plyCounter))
+        else:
+            for action in legalActions:
+                sum += float(self.maxNode(gameState.generateSuccessor(currentGhostIndex, action), totalNumGhosts, plyCounter - 1))
+        return sum / (len(legalActions))
 
     def getAction(self, gameState):
         """
-        Returns the expectimax action using self.depth and self.evaluationFunction
-
-        All ghosts should be modeled as choosing uniformly at random from their
-        legal moves.
+            Returns the expectimax action using self.depth and self.evaluationFunction
+            All ghosts should be modeled as choosing uniformly at random from their
+            legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        actions = []
+        evaluations = []
+
+        for action in gameState.getLegalActions():
+            actions.append(action)
+            numGhosts = gameState.getNumAgents() - 1
+            evaluations.append(self.minNode(gameState.generateSuccessor(self.index, action), numGhosts, self.depth))
+
+        maxEvalIndex = evaluations.index(max(evaluations))
+        return actions[maxEvalIndex]
 
 def betterEvaluationFunction(currentGameState):
     """
